@@ -5,7 +5,7 @@ const geocode = require('./utils/geocode')
 const forecast = require('./utils/forecast')
 
 const app = express()
-const port = process.env.PORT || 3000
+const port = process.env.PORT
 
 // Define paths for express config
 const publicDirectoryPath = path.join(__dirname, '../public')
@@ -20,27 +20,26 @@ hbs.registerPartials(partialsPath)
 // Setup static directory to serve
 app.use(express.static(publicDirectoryPath))
 
-
-
 app.get('', (req, res) => {
     res.render('index', {
         title: 'Weather app',
-        name: 'JW'
+        name: 'JW Kim'
     })
 })
 
 app.get('/about', (req, res) => {
     res.render('about', {
-        title: 'About me',
-        name: 'JW'
+        title: 'About',
+        name: 'JW Kim'
     })
 })
 
 app.get('/help', (req, res) => {
     res.render('help', {
         title: 'Help',
-        name: 'JW',
-        helpText: 'This is help text'
+        name: 'JW Kim',
+        helpText: 'Please contact ',
+        email: 'lhouette@gmail.com'
     })
 })
 
@@ -70,22 +69,46 @@ app.get('/weather', (req, res) => {
     })  
 })
 
-app.get('/products', (req, res) => {
-    if (!req.query.search) {
+app.get('/weather/current', (req, res) => {
+    if (!req.query.latitude || !req.query.longitude) {
         return res.send({
-            error: 'You must provide a search term'
+            error: 'You must provide your current location'
         })
     }
 
-    res.send({
-        products: []
+    const locationString = req.query.longitude + ',' + req.query.latitude
+
+    geocode(locationString, (error, { latitude, longitude, location } = {}) => {
+        if (error) {
+            return res.send({ error })
+        }
+        
+        forecast(latitude, longitude, (error, forecastData) => {
+            if (error) {
+                return res.send({ error })
+            }
+
+            res.send({
+                forecast: forecastData,
+                location,
+                address: req.query.address
+            })
+        })
+    })
+})
+
+app.get('/about/*', (req, res) => {
+    res.render('404', {
+        title: '404',
+        name: 'JW Kim',
+        errorMessage: 'about article not found'
     })
 })
 
 app.get('/help/*', (req, res) => {
     res.render('404', {
         title: '404',
-        name: 'JW',
+        name: 'JW Kim',
         errorMessage: 'Help article not found'
     })
 })
@@ -93,8 +116,8 @@ app.get('/help/*', (req, res) => {
 app.get('*', (req, res) => {
     res.render('404', {
         title: '404',
-        name: 'JW',
-        errorMessage: 'My 404 page'
+        name: 'JW Kim',
+        errorMessage: 'Page not found'
     })
 })
 
